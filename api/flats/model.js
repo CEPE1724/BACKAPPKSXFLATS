@@ -11,6 +11,10 @@ const FlatSchema = new Schema({
         type: String,
         required: true
     },
+    canton: {
+        type: String,
+        required: true
+    },
     dateAvailable: {
         type: String,
         required: true

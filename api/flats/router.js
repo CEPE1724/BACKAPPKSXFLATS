@@ -10,5 +10,6 @@ router.get('/:id', controller.findFullFlatById);
 router.get('/', controller.findAllFlats);
 router.put('/:id', controller.updateFlat);
 router.get('/user/:userId', controller.findFlatsByUser);
+router.get('/counters/user', controller.countFlats);
 
 module.exports = router;

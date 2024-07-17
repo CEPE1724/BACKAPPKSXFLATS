@@ -6,6 +6,9 @@ const codigoemailrouter = require ('./api/email/verificacionUsuario/router')
 const flatRoutes = require('./api/flats/router');
 const favoriteFlatRoutes = require('./api/favoriteFlats/router');
 const messageRoutes = require('./api/message/router');
+const provinciaRoutes = require('./api/provincia/router');
+const cantonRoutes = require('./api/canton/router');
+const searchFlatsRoutes = require('./api/searchFlats/router');
 require('dotenv').config();
 
 var app = express();
@@ -19,6 +22,9 @@ app.use('/api/v1/email', codigoemailrouter);
 app.use('/api/v1/flats', flatRoutes);
 app.use('/api/v1/favoriteFlats', favoriteFlatRoutes);
 app.use('/api/v1/messages', messageRoutes);
+app.use('/api/v1/provincias', provinciaRoutes);
+app.use('/api/v1/cantones', cantonRoutes);
+app.use('/api/v1/searchFlats', searchFlatsRoutes);
 
 
 // Conectar a la base de datos sin las opciones de configuración deprecadas

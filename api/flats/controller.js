@@ -1,15 +1,14 @@
 const Flat = require("../flats/model");
 const Favorite = require("../favoriteFlats/model");
-
+const User = require("../users/model");
 const mongoose = require("mongoose");
 
 exports.create = async (req, res) => {
   try {
-    console.log(req.body);
-
     const {
       areaSize,
       city,
+      canton,
       dateAvailable,
       hasAc,
       rentPrice,
@@ -35,6 +34,7 @@ exports.create = async (req, res) => {
           {
             areaSize,
             city,
+            canton,
             dateAvailable,
             hasAc,
             rentPrice,
@@ -48,10 +48,11 @@ exports.create = async (req, res) => {
       }
     }
 
-    // Create the flat
+    // Create a new flat if no ID provided or ID doesn't exist
     const flat = await Flat.create({
       areaSize,
       city,
+      canton,
       dateAvailable,
       hasAc,
       rentPrice,
@@ -81,6 +82,7 @@ exports.findFullFlatById = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
 exports.findAllFlats = async (req, res) => {
   try {
     const flats = await Flat.find().populate("user", ["email", "avatar", "firstName", "lastName"]);
@@ -91,29 +93,38 @@ exports.findAllFlats = async (req, res) => {
   }
 };
 
+exports.countFlats = async (req, res) => {
+  try {
+    console.log("Counting flats...");
+    const flatsCount = await Flat.countDocuments({});
+    return res.status(200).json({ flatsCount });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 exports.findFlatsByUser = async (req, res) => {
-  const userId = req.params.userId; // Obtén el ID del usuario de los parámetros de la solicitud
+  const userId = req.params.userId;
 
   try {
-    // Buscar todos los favoritos del usuario dado
     const favorites = await Favorite.find({
       user: userId,
       status: "active",
     }).populate("flat");
 
-    // Extraer los flats de los favoritos encontrados
     const favoriteFlats = favorites.map((favorite) => favorite.flat);
 
     return res.status(200).json({
       status: "success",
-      message: "Flats favoritos encontrados correctamente.",
+      message: "Favorite flats found successfully.",
       favoriteFlats: favoriteFlats,
     });
   } catch (error) {
-    console.error("Error al buscar flats favoritos:", error);
+    console.error("Error finding favorite flats:", error);
     return res.status(500).json({
       status: "error",
-      message: "Error al buscar flats favoritos. Inténtalo de nuevo más tarde.",
+      message: "Error finding favorite flats. Please try again later.",
     });
   }
 };
@@ -124,27 +135,28 @@ exports.updateFlat = async (req, res) => {
     const {
       areaSize,
       city,
+      canton,
       dateAvailable,
       hasAc,
       rentPrice,
       streetName,
       streetNumber,
       yearBuilt,
+      user, // Assuming user object is provided in req.body
     } = req.body;
-    const userId = req.body.user._id;
-    // Asegúrate de acceder correctamente al _id del usuario
-    console.log(id);
+
     const flat = await Flat.findByIdAndUpdate(
       id,
       {
         areaSize,
         city,
+        canton,
         dateAvailable,
         hasAc,
         rentPrice,
         streetName,
         streetNumber,
-        userId, // Actualiza el userId correctamente
+        user,
         yearBuilt,
       },
       { new: true }

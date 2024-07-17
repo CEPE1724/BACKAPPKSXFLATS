@@ -5,6 +5,9 @@ const controller = require('./controller'); // Ajusta la ruta según tu estructu
 
 
 router.post('/', controller.create);
-
+router.get('/', controller.getAll);
+router.get('/:idUsuarioRecibe', controller.getById);
+router.get('/flat/:idUsuarioRecibe', controller.getFlatsWithMessageCountByUser);
+router.get('/message/:idUsuarioRecibe/:idUsuarioEnvia/:idflat', controller.getMessagesByParams);
 
 module.exports = router;
