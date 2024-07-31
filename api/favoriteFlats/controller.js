@@ -67,7 +67,7 @@ exports.getFavorites = async (req, res) => {
 
 exports.getAllFavorites = async (req, res) => {
     const { user } = req.params;
-
+    console.log(user);
     try {
         // Buscar todos los favoritos activos de un usuario
         let favorites = await Favorite.find({ user: user, status: 'active' }).populate({
@@ -78,32 +78,45 @@ exports.getAllFavorites = async (req, res) => {
             },
         });
 
-        // Mapear los resultados para devolver la estructura deseada
-        favorites = favorites.map((favorite) => ({
-            _id: favorite.flat._id,
-            areaSize: favorite.flat.areaSize,
-            city: favorite.flat.city,
-            dateAvailable: favorite.flat.dateAvailable,
-            hasAc: favorite.flat.hasAc,
-            rentPrice: favorite.flat.rentPrice,
-            streetName: favorite.flat.streetName,
-            streetNumber: favorite.flat.streetNumber,
-            user: {
-                _id: favorite.flat.user._id,
-                email: favorite.flat.user.email,
-                avatar: favorite.flat.user.avatar,
-                firstName: favorite.flat.user.firstName,
-                lastName: favorite.flat.user.lastName,
-            },
-            yearBuilt: favorite.flat.yearBuilt,
-            __v: favorite.flat.__v,
-        }));
+        // Verificar si favorites es null o vacío
+        if (!favorites || favorites.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'No se encontraron favoritos para el usuario especificado.',
+            });
+        }
 
-        /*return res.status(200).json({
-            status: 'success',
-            message: 'Favoritos encontrad edison.',
-            favorites: favorites,
-        });*/
+        // Mapear los resultados para devolver la estructura deseada
+        favorites = favorites.map((favorite) => {
+            // Verificar si favorite.flat o favorite.flat.user son null
+            if (!favorite.flat || !favorite.flat.user) {
+                return null; // O manejar de otra manera según sea necesario
+            }
+
+            return {
+                _id: favorite.flat._id,
+                areaSize: favorite.flat.areaSize,
+                city: favorite.flat.city,
+                dateAvailable: favorite.flat.dateAvailable,
+                hasAc: favorite.flat.hasAc,
+                rentPrice: favorite.flat.rentPrice,
+                streetName: favorite.flat.streetName,
+                streetNumber: favorite.flat.streetNumber,
+                user: {
+                    _id: favorite.flat.user._id,
+                    email: favorite.flat.user.email,
+                    avatar: favorite.flat.user.avatar,
+                    firstName: favorite.flat.user.firstName,
+                    lastName: favorite.flat.user.lastName,
+                },
+                yearBuilt: favorite.flat.yearBuilt,
+                __v: favorite.flat.__v,
+            };
+        });
+
+        // Filtrar y eliminar elementos nulos en el arreglo de favoritos
+        favorites = favorites.filter((favorite) => favorite !== null);
+
         return res.status(200).json(favorites);
     } catch (error) {
         console.error('Error al buscar favoritos:', error);
@@ -113,3 +126,4 @@ exports.getAllFavorites = async (req, res) => {
         });
     }
 };
+

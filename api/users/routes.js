@@ -8,4 +8,6 @@ router.get('/:id', controller.findById);
 router.put('/:id', controller.updateUser);
 router.get('/', controller.getAll);
 router.get('/filter');
+router.get('/delete/:id', controller.deleteUser);
+router.get('/saveresetpassword/:email', controller.saveResetPassword);
 module.exports = router;

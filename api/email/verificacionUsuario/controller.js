@@ -171,3 +171,50 @@ exports.verifyEmail = async (req, res) => {
     });
   }
 };
+
+exports.resendEmail = async (req, res) => {
+  const email = req.params.email;
+
+  try {
+    if (!email) {
+      return res.status(400).send("El campo de correo electrónico es requerido.");
+    }
+
+    // Generar un nuevo código de validación
+    const validationCode = generateValidationCode();
+    const expiresAt = new Date(Date.now() + 2 * 60 * 1000); // Expira en 2 minutos
+
+    // Crear o actualizar el registro de código de validación
+    await model.findOneAndUpdate(
+      { email: email },
+      { email: email, validation_code: validationCode, expires_at: expiresAt },
+      { upsert: true, new: true }
+    );
+
+    // Envío de correo electrónico con contenido HTML
+    try {
+      await sendEmail({
+        email: email,
+        subject: "Confirmación de correo electrónico",
+        htmlContent: generateEmailContent(validationCode, true),
+      });
+      return res.status(200).json({
+        status: "success",
+        message: "Código de validación reenviado por correo electrónico.",
+      });
+    } catch (emailError) {
+      console.error("Error al enviar el correo electrónico:", emailError);
+      return res.status(500).json({
+        status: "error",
+        message: "Error al enviar el correo electrónico. Inténtalo de nuevo más tarde.",
+      });
+    }
+
+  } catch (error) {
+    console.error("Error al procesar la solicitud:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Error al procesar la solicitud. Inténtalo de nuevo más tarde.",
+    });
+  }
+}

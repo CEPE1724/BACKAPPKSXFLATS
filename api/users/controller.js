@@ -3,6 +3,8 @@ const model = require("./model");
 const Flats = require("../flats/model");
 const Favorites = require("../favoriteFlats/model");
 const User = require('../users/model');
+const Message = require('../message/model');
+
 exports.create = async (req, res) => {
     const { email, password } = req.body;
 
@@ -239,5 +241,92 @@ exports.filterUsers = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: error.message });
+    }
+};
+
+exports.deleteUser = async (req, res) => {
+
+    const { id } = req.params;
+    console.log(id);
+
+    try {
+        const user = await model.findByIdAndDelete(id);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        const flats = await Flats.find({ user: id });
+        if (flats.length > 0) {
+            await Flats.deleteMany({ user: id });
+        }
+
+        const favorites = await Favorites.find({ user: id });
+        if (favorites.length > 0) {
+            await Favorites.deleteMany({ user: id });
+        }
+
+        const messages = await Message.find({ _idUsuarioEnvia: id });
+        if (messages.length > 0) {
+            await Message.deleteMany({ _idUsuarioEnvia: id });
+        }
+
+        const messagesRecibe = await Message.find({ _idUsuarioRecibe: id });
+        if (messagesRecibe.length > 0) {
+            await Message.deleteMany({ _idUsuarioRecibe: id });
+        }
+
+
+        return res.status(200).json({ message: 'Usuario eliminado correctamente' });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+
+const bcrypt = require('bcryptjs'); // Importa bcrypt para el hash de contraseñas
+
+
+const generateRandomCode = () => {
+    const length = 7;
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+';
+    const charactersLength = characters.length;
+    let result = '';
+
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * charactersLength);
+        result += characters.charAt(randomIndex);
+    }
+
+    return result;
+};
+
+exports.saveResetPassword = async (req, res) => {
+    const { email } = req.params; // Obtén el email del parámetro de la URL
+
+    try {
+        // Buscar al usuario por su correo electrónico
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Generar el código aleatorio para la nueva contraseña
+        const resetCode = generateRandomCode();
+
+        // Actualizar la contraseña directamente con el código aleatorio
+        user.password = resetCode;
+        user.passwordChangedAt = new Date(); // Registrar la fecha de cambio de contraseña
+
+        console.log('Reset code:', resetCode);
+        // Guardar el usuario actualizado en la base de datos
+        await user.save();
+
+        res.status(200).json({ message: 'Password updated successfully', resetCode });
+    } catch (error) {
+        console.error('Error updating password:', error);
+        res.status(500).json({ message: 'Failed to update password', error });
     }
 };
